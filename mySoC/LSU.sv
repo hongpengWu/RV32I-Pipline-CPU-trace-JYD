@@ -21,7 +21,7 @@ module LSU (
 
     output     [31:0] rd_value_next,
     output            R_wen_next,
-    output reg [31:0] LSU_Rdata,
+    output     [31:0] LSU_Rdata,
     output     [ 3:0] csr_wen_next,
     output     [31:0] Ex_result_next,
     output     [ 4:0] rd_next,
@@ -36,10 +36,10 @@ module LSU (
     input  [31:0] rdata,
 
     input      valid_last,
-    output reg ready_last,
+    output logic ready_last,
 
     input      ready_next,
-    output reg valid_next
+    output logic valid_next
 
 
 );
@@ -51,32 +51,32 @@ module LSU (
 
   wire [ 4:0] rdata_b_choice;
 
-  reg  [31:0] rdata_ex;
-  reg         mem_ren_reg;
-  reg         mem_wen_reg;
-  reg         R_wen_reg;
-  reg  [ 3:0] csr_wen_reg;
-  reg  [31:0] Ex_result_reg;
-  reg  [31:0] rd_value_reg;
-  reg  [ 4:0] rd_reg;
-  reg  [ 2:0] funct3_reg;
-  reg  [31:0] rs2_value_reg;
-  reg         jump_flag_reg;
-  reg         valid_last_reg;
+  logic [31:0] rdata_ex;
+  logic        mem_ren_reg;
+  logic        mem_wen_reg;
+  logic        R_wen_reg;
+  logic [ 3:0] csr_wen_reg;
+  logic [31:0] Ex_result_reg;
+  logic [31:0] rd_value_reg;
+  logic [ 4:0] rd_reg;
+  logic [ 2:0] funct3_reg;
+  logic [31:0] rs2_value_reg;
+  logic        jump_flag_reg;
+  logic        valid_last_reg;
 
-  always @(posedge clock) begin
+  always_ff @(posedge clock) begin
     if (reset) valid_next <= 1'b0;
     else valid_next <= valid_last;
 
   end
-  always @(posedge clock) begin
+  always_ff @(posedge clock) begin
     if (reset) pc_out <= 0;
     else if (ready_last & valid_last) pc_out <= pc;
   end
 
 
 
-  always @(posedge clock) begin
+  always_ff @(posedge clock) begin
     if (reset) begin
       mem_ren_reg   <= 0;
       mem_wen_reg   <= 0;
@@ -167,4 +167,3 @@ module LSU (
 
 
 endmodule  //MEM
-
