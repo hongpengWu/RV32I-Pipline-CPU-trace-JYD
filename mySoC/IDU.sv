@@ -117,55 +117,35 @@ module IDU(
                         (opcode == `M_opcode && funct3 == 3'b001)? 0 : imm;
  
 
-    wire is_S_opcode;
-    wire is_I0_opcode;
-    wire is_U0_opcode;
-    wire is_U1_opcode;
-    wire is_J_opcode;
-    wire is_I2_opcode;
-    wire is_I1_opcode;
-    wire is_R_opcode;
-    wire is_B_opcode;
-
-    assign is_S_opcode  = (opcode == `S_opcode);
-    assign is_I0_opcode = (opcode == `I0_opcode);
-    assign is_U0_opcode = (opcode == `U0_opcode);
-    assign is_U1_opcode = (opcode == `U1_opcode);
-    assign is_J_opcode  = (opcode == `J_opcode);
-    assign is_I2_opcode = (opcode == `I2_opcode);
-    assign is_I1_opcode = (opcode == `I1_opcode);
-    assign is_R_opcode  = (opcode == `R_opcode);
-    assign is_B_opcode  = (opcode == `B_opcode);
-
-    assign alu_opcode = (is_S_opcode || is_I0_opcode 
-                        || is_U0_opcode || is_U1_opcode
-                        || is_J_opcode || is_I2_opcode
-                        || (is_I1_opcode  &&  funct3 == 3'b000)  || (is_R_opcode         &&
-                        funct3 == 3'b000 && oprand[5] == 1'b0) || (is_B_opcode                             &&
+    assign alu_opcode = (opcode == `S_opcode ||  opcode == `I0_opcode 
+                        || opcode == `U0_opcode || opcode == `U1_opcode
+                        || opcode == `J_opcode || opcode == `I2_opcode
+                        || (opcode ==`I1_opcode  &&  funct3 == 3'b000)  || (opcode == `R_opcode         &&
+                        funct3 == 3'b000 && oprand[5] == 1'b0) || (opcode == `B_opcode                             &&
                         funct3[2:1] == 2'b01                 ))                                                                     ?
-                        `alu_add :(is_I1_opcode && funct3 == 3'b010)                            ||
-                        (is_R_opcode && funct3 == 3'b010)                                                     ||
-                        (is_B_opcode && (funct3 == 3'b101 || funct3 == 3'b100))                               ?
+                        `alu_add :(opcode == `I1_opcode && funct3 == 3'b010)                            ||
+                        (opcode == `R_opcode && funct3 == 3'b010)                                                     ||
+                        (opcode == `B_opcode && (funct3 == 3'b101 || funct3 == 3'b100))                               ?
                         `alu_signed_comparator:
-                        (is_B_opcode && (funct3 == 3'b110 || funct3 == 3'b111))                               ||
-                        (is_I1_opcode && (funct3 == 3'b011))                                                  ||
-                        (is_R_opcode && (funct3 ==  3'b011))                                                  ?
+                        (opcode == `B_opcode && (funct3 == 3'b110 || funct3 == 3'b111))                               ||
+                        (opcode == `I1_opcode && (funct3 == 3'b011))                                                  ||
+                        (opcode == `R_opcode && (funct3 ==  3'b011))                                                  ?
                         `alu_unsigned_comparator:
-                        (is_I1_opcode && funct3 == 3'b100 )                                                   ||
-                        (is_R_opcode && funct3 == 3'b100 )                                                    ?
-                        `alu_xor :(is_I1_opcode && funct3 == 3'b110 )                           ||
-                        (is_R_opcode && funct3 == 3'b110 )                                                    ||
+                        (opcode == `I1_opcode && funct3 == 3'b100 )                                                   ||
+                        (opcode == `R_opcode && funct3 == 3'b100 )                                                    ?
+                        `alu_xor :(opcode == `I1_opcode && funct3 == 3'b110 )                           ||
+                        (opcode == `R_opcode && funct3 == 3'b110 )                                                    ||
                         (opcode == `M_opcode && funct3 == 3'b010 )                                                    ?
-                        `alu_or  : (is_I1_opcode && funct3 == 3'b111 )                          ||
-                        (is_R_opcode && funct3 == 3'b111 )                                                    ?
-                        `alu_and :(is_I1_opcode && funct3 == 3'b001  )                          ||
-                        (is_R_opcode && funct3 == 3'b001 )                                                    ?
-                        `alu_sll :(is_I1_opcode && funct3 == 3'b101 && oprand[5] == 1'b0)    ||
-                        (is_R_opcode && funct3 == 3'b101 && oprand[5] == 1'b0)                             ?
-                        `alu_srl :(is_I1_opcode && funct3 == 3'b101 && oprand[5] == 1'b1)    ||
-                        (is_R_opcode && funct3 == 3'b101 && oprand[5] == 1'b1)                             ?
-                        `alu_sra : (is_R_opcode && funct3 == 3'b000 && oprand[5] == 1'b1)    ?
-                        `alu_sub : (is_B_opcode && funct3[2:1] == 2'b00)                        ?
+                        `alu_or  : (opcode == `I1_opcode && funct3 == 3'b111 )                          ||
+                        (opcode == `R_opcode && funct3 == 3'b111 )                                                    ?
+                        `alu_and :(opcode == `I1_opcode && funct3 == 3'b001  )                          ||
+                        (opcode == `R_opcode && funct3 == 3'b001 )                                                    ?
+                        `alu_sll :(opcode == `I1_opcode && funct3 == 3'b101 && oprand[5] == 1'b0)    ||
+                        (opcode == `R_opcode && funct3 == 3'b101 && oprand[5] == 1'b0)                             ?
+                        `alu_srl :(opcode == `I1_opcode && funct3 == 3'b101 && oprand[5] == 1'b1)    ||
+                        (opcode == `R_opcode && funct3 == 3'b101 && oprand[5] == 1'b1)                             ?
+                        `alu_sra : (opcode == `R_opcode && funct3 == 3'b000 && oprand[5] == 1'b1)    ?
+                        `alu_sub : (opcode == `B_opcode && funct3[2:1] == 2'b00)                        ?
                         `alu_equal:`alu_add;
 
 
@@ -181,7 +161,8 @@ module IDU(
                  (opcode == `U0_opcode || opcode == `U1_opcode)? imm_U:
                  (opcode == `J_opcode)? imm_J:
                  (opcode == `B_opcode)? imm_B:
-                 (opcode == `S_opcode)? imm_S:
+                 (opcode == `S_opcode)? imm_S: 
+                 (opcode == `S_opcode)? imm_R :
                   0;
 
 Reg_Stack Reg_Stack_inst0(
@@ -213,3 +194,4 @@ Reg_Stack Reg_Stack_inst0(
 
 
 endmodule
+

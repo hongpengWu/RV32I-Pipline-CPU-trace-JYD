@@ -111,11 +111,6 @@ module myCPU (
   wire IFU_stall;
   wire icache_clr;
 
-  reg  [31:0] IF_ID_inst;
-  reg  [31:0] IF_ID_pc;
-  reg  [31:0] IF_ID_snpc;
-  reg         IF_ID_valid;
-
   assign irom_addr = IFU_pc;
 
 assign debug_wb_have_inst = WBU_valid;
@@ -140,25 +135,6 @@ assign debug_wb_value = WBU_rd_value;
       .valid(IFU_valid)
   );
 
-
-  always @(posedge cpu_clk) begin
-    if (cpu_rst) begin
-      IF_ID_inst  <= 32'b0;
-      IF_ID_pc    <= 32'b0;
-      IF_ID_snpc  <= 32'b0;
-      IF_ID_valid <= 1'b0;
-    end else if (dnpc_flag) begin
-      IF_ID_inst  <= 32'b0;
-      IF_ID_pc    <= 32'b0;
-      IF_ID_snpc  <= 32'b0;
-      IF_ID_valid <= 1'b0;
-    end else begin
-      IF_ID_inst  <= IFU_inst;
-      IF_ID_pc    <= IFU_pc;
-      IF_ID_snpc  <= IFU_snpc;
-      IF_ID_valid <= IFU_valid;
-    end
-  end
 
   Control Control_inst0 (
 
@@ -211,9 +187,9 @@ assign debug_wb_value = WBU_rd_value;
       .clock(cpu_clk),
       .reset(cpu_rst),
 
-      .snpc    (IF_ID_snpc),
-      .inst    (IF_ID_inst),
-      .pc      (IF_ID_pc),
+      .snpc    (IFU_snpc),
+      .inst    (IFU_inst),
+      .pc      (IFU_pc),
       .rd_value(WBU_rd_value),
       .csrd    (WBU_csrd),
       .rd      (WBU_rd),
@@ -252,7 +228,7 @@ assign debug_wb_value = WBU_rd_value;
       .mtvec_out(IDU_mtvec_out),
 
 
-      .valid_last(IF_ID_valid),
+      .valid_last(IFU_valid),
       .ready_last(IDU_ready),
 
       .ready_next(EXU_ready),
@@ -377,3 +353,4 @@ assign debug_wb_value = WBU_rd_value;
   );
 
 endmodule
+

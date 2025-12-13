@@ -15,7 +15,7 @@ module IFU
     output             [  31: 0]        inst                       ,
 
     input                               ready                      ,
-    output                              valid
+    output reg                          valid                      
 
 );
 
@@ -43,3 +43,4 @@ end
 
 
 endmodule
+
