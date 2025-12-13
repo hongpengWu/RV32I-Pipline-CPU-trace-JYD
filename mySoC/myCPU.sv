@@ -136,6 +136,9 @@ assign debug_wb_value = WBU_rd_value;
   );
 
 
+  wire [31:0] MEM_forward_val;
+  assign MEM_forward_val = (LSU_jump_flag | (|LSU_csr_wen)) ? LSU_rd_value : LSU_Ex_result;
+
   Control Control_inst0 (
 
       .clock    (cpu_clk),
@@ -145,7 +148,7 @@ assign debug_wb_value = WBU_rd_value;
 
       .branch_pc    (EXU_branch_pc),
       .Ex_result    (EXU_Ex_result),
-      .MEM_Ex_result(WBU_rd_value),
+      .MEM_Ex_result(MEM_forward_val),
       .IDU_rs1_value(IDU_rs1_value),
       .IDU_rs2_value(IDU_rs2_value),
       .MEM_Rdata    (LSU_Rdata),
@@ -171,6 +174,11 @@ assign debug_wb_value = WBU_rd_value;
       .EXU_R_Wen(EXU_R_wen),
       .MEM_R_Wen(LSU_R_wen),
 
+      .WB_rd_value(WBU_rd_value),
+      .WB_rd(WBU_rd),
+      .WB_R_Wen(WBU_R_wen),
+      .WB_valid(WBU_valid),
+
       .IFU_stall      (IFU_stall),
       .EXU_rs1_in    (EXU_rs1_in),
       .EXU_rs2_in    (EXU_rs2_in),
@@ -187,9 +195,12 @@ assign debug_wb_value = WBU_rd_value;
       .clock(cpu_clk),
       .reset(cpu_rst),
 
-      .snpc    (IFU_snpc),
-      .inst    (IFU_inst),
-      .pc      (IFU_pc),
+      .snpc_in    (IFU_snpc),
+      .inst_in    (IFU_inst),
+      .pc_in      (IFU_pc),
+      .flush      (dnpc_flag),
+      .stall      (IFU_stall),
+
       .rd_value(WBU_rd_value),
       .csrd    (WBU_csrd),
       .rd      (WBU_rd),
@@ -329,15 +340,15 @@ assign debug_wb_value = WBU_rd_value;
       .clock(cpu_clk),
       .reset(cpu_rst),
 
-      .MEM_Rdata(LSU_Rdata),
-      .Ex_result(LSU_Ex_result),
-      .rd_value (LSU_rd_value),
-      .rd       (LSU_rd),
-      .csr_wen  (LSU_csr_wen),
-      .R_wen    (LSU_R_wen),
-      .mem_ren  (LSU_mem_ren),
-      .jump_flag(LSU_jump_flag),
-      .pc (LSU_pc),
+      .MEM_Rdata_in(LSU_Rdata),
+      .Ex_result_in(LSU_Ex_result),
+      .rd_value_in (LSU_rd_value),
+      .rd_in       (LSU_rd),
+      .csr_wen_in  (LSU_csr_wen),
+      .R_wen_in    (LSU_R_wen),
+      .mem_ren_in  (LSU_mem_ren),
+      .jump_flag_in(LSU_jump_flag),
+      .pc_in (LSU_pc),
 
       .R_wen_next   (WBU_R_wen),
       .csr_wen_next (WBU_csr_wen),
@@ -345,7 +356,7 @@ assign debug_wb_value = WBU_rd_value;
       .rd_value_next(WBU_rd_value),
       .pc_out(WBU_pc),
 
-      .valid(LSU_valid),
+      .valid_in(LSU_valid),
       .ready(WBU_ready),
 
       .rd_next   (WBU_rd),

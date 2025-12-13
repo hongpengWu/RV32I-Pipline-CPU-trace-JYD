@@ -4,9 +4,12 @@ module IDU(
     input                               clock                      ,
     input                               reset                      ,
 
-    input              [  31: 0]        inst                       ,
-    input              [  31: 0]        snpc                       ,
-    input              [  31: 0]        pc                         ,
+    input              [  31: 0]        inst_in                    ,
+    input              [  31: 0]        snpc_in                    ,
+    input              [  31: 0]        pc_in                      ,
+
+    input                               flush                      ,
+    input                               stall                      ,
 
     input              [  31: 0]        rd_value                   ,
     input              [  31: 0]        csrd                       ,
@@ -56,6 +59,28 @@ module IDU(
     output                              valid_next                  
 );
 
+    reg                [  31: 0]        inst                        ;
+    reg                [  31: 0]        snpc                        ;
+    reg                [  31: 0]        pc                          ;
+    reg                                 valid                       ;
+
+    assign                              ready_last                  = ready_next && !stall;
+    assign                              valid_next                  = valid;
+
+    always @(posedge clock) begin
+        if(reset || flush) begin
+            inst <= 32'h00000013;
+            snpc <= 0;
+            pc <= 0;
+            valid <= 0;
+        end
+        else if(ready_next && !stall) begin
+            inst <= inst_in;
+            snpc <= snpc_in;
+            pc <= pc_in;
+            valid <= valid_last;
+        end
+    end
 
     wire               [  31: 0]        csr_addr                    ;
     wire               [   6: 0]        oprand                      ;
@@ -69,11 +94,6 @@ module IDU(
     wire               [  31: 0]        imm_J                       ;
     wire               [  31: 0]        csrs                        ;
     wire               [  31: 0]        imm                         ;
-
-    assign                              ready_last                  = ready_next;
-    assign                              valid_next                  = valid_last;
-
-
 
     assign                              oprand                      = inst[31:25];
     assign                              opcode                      = inst[6:0];

@@ -34,6 +34,10 @@ module Control (
     input                               EXU_mem_ren                ,
     input                               EXU_R_Wen                  ,
     input                               MEM_R_Wen                  ,
+    input              [  31: 0]        WB_rd_value                ,
+    input              [   4: 0]        WB_rd                      ,
+    input                               WB_R_Wen                   ,
+    input                               WB_valid                   ,
 
 
     output                              IFU_stall                  ,
@@ -47,8 +51,8 @@ module Control (
 );
 
 
-    wire               [   1: 0]        IDU_rs1_choice              ;
-    wire               [   1: 0]        IDU_rs2_choice              ;
+    wire               [   2: 0]        IDU_rs1_choice              ;
+    wire               [   2: 0]        IDU_rs2_choice              ;
 
 
 
@@ -64,14 +68,16 @@ module Control (
 
 
 
-    assign EXU_rs1_in = (IDU_rs1_choice == 2'b01)? Ex_result:
-                        (IDU_rs1_choice == 2'b11)? MEM_Rdata:
-                        (IDU_rs1_choice == 2'b10)? MEM_Ex_result:
+    assign EXU_rs1_in = (IDU_rs1_choice == 3'b001)? Ex_result:
+                        (IDU_rs1_choice == 3'b011)? MEM_Rdata:
+                        (IDU_rs1_choice == 3'b010)? MEM_Ex_result:
+                        (IDU_rs1_choice == 3'b100)? WB_rd_value:
                         IDU_rs1_value;
 
-    assign EXU_rs2_in = (IDU_rs2_choice == 2'b01)? Ex_result:
-                        (IDU_rs2_choice == 2'b11)? MEM_Rdata:
-                        (IDU_rs2_choice == 2'b10)? MEM_Ex_result:
+    assign EXU_rs2_in = (IDU_rs2_choice == 3'b001)? Ex_result:
+                        (IDU_rs2_choice == 3'b011)? MEM_Rdata:
+                        (IDU_rs2_choice == 3'b010)? MEM_Ex_result:
+                        (IDU_rs2_choice == 3'b100)? WB_rd_value:
                         IDU_rs2_value;
 
 
@@ -81,14 +87,17 @@ Data_hazard Data_hazard_inst(
 
     .EXU_rd                             (EXU_rd                    ),
     .MEM_rd                             (MEM_rd                    ),
+    .WB_rd                              (WB_rd                     ),
 
     .MEM_valid                          (MEM_valid                 ),
     .EXU_valid                          (EXU_valid                 ),
     .IDU_valid                          (IDU_valid                 ),
+    .WB_valid                           (WB_valid                  ),
 
     .MEM_mem_ren                        (MEM_mem_ren               ),
     .EXU_R_Wen                          (EXU_R_Wen                 ),
     .MEM_R_Wen                          (MEM_R_Wen                 ),
+    .WB_R_Wen                           (WB_R_Wen                  ),
 
     .IDU_rs1_choice                     (IDU_rs1_choice            ),
     .IDU_rs2_choice                     (IDU_rs2_choice            ) 
