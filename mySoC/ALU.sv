@@ -12,9 +12,9 @@ module ALU #(
 );
 
     logic choose_add_sub;
-    wire [BW-1:0]       result;
-    wire [BW-1:0]       d2_inv;
-    wire [BW-1:0]       d1_inv;
+    logic [BW-1:0]       result;
+    logic [BW-1:0]       d2_inv;
+    logic [BW-1:0]       d1_inv;
     assign d2_inv = ~d2;
     assign d1_inv = ~d1;
 

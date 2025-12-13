@@ -8,24 +8,24 @@ module WBU (
     input [31:0] MEM_Rdata_in,
     input [31:0] Ex_result_in,
     input [31:0] rd_value_in,
-    input [ 4:0] rd_in,
-    input [ 3:0] csr_wen_in,
-    input        R_wen_in,
-    input        mem_ren_in,
-    input        jump_flag_in,
+    input [4:0] rd_in,
+    input [3:0] csr_wen_in,
+    input R_wen_in,
+    input mem_ren_in,
+    input jump_flag_in,
     input [31:0] pc_in,
 
-    input  valid_in,
+    input valid_in,
     output logic ready,
 
-    output logic  valid_next,
-    output logic  R_wen_next,
-    output [ 3:0] csr_wen_next,
+    output logic valid_next,
+    output logic R_wen_next,
+    output [3:0] csr_wen_next,
     output [31:0] csrd,
 
     output logic [31:0] pc_out,
     output       [31:0] rd_value_next,
-    output       [ 4:0] rd_next
+    output [4:0] rd_next
 );
 
   logic [31:0] MEM_Rdata_reg;
@@ -68,7 +68,8 @@ module WBU (
 
   assign pc_out        = pc_reg;
   assign valid_next    = valid_reg;
-  wire wb_sel_jmp_csr = jump_flag_reg | (|csr_wen_reg);
+  logic wb_sel_jmp_csr;
+  assign wb_sel_jmp_csr = jump_flag_reg | (|csr_wen_reg);
   assign rd_value_next = wb_sel_jmp_csr ? rd_value_reg : (mem_ren_reg ? MEM_Rdata_reg : Ex_result_reg);
   assign csrd          = Ex_result_reg;
   assign csr_wen_next  = csr_wen_reg;

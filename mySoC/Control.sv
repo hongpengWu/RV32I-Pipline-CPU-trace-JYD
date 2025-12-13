@@ -1,50 +1,51 @@
 module Control (
-    input               clock,
-    input               reset,
-    input       [31:0]  mtvec_out,
-    input       [31:0]  mepc_out,
-    input       [31:0]  branch_pc,
-    input       [31:0]  Ex_result,
-    input       [31:0]  MEM_Ex_result,
-    input       [31:0]  MEM_Rdata,
-    input       [31:0]  IDU_rs1_value,
-    input       [31:0]  IDU_rs2_value,
-    input               branch_flag,
-    input               jump_flag,
-    input               mret_flag,
-    input               ecall_flag,
-    input               MEM_mem_ren,
-    input               fence_i_flag,
-    input       [4:0]   IDU_rs1,
-    input       [4:0]   IDU_rs2,
-    input               IDU_valid,
-    input               EXU_valid,
-    input               MEM_valid,
-    input       [4:0]   EXU_rd,
-    input       [4:0]   MEM_rd,
-    input               EXU_mem_ren,
-    input               EXU_R_Wen,
-    input               MEM_R_Wen,
-    input       [31:0]  WB_rd_value,
-    input       [4:0]   WB_rd,
-    input               WB_R_Wen,
-    input               WB_valid,
-    output              IFU_stall,
-    output      [31:0]  EXU_rs1_in,
-    output      [31:0]  EXU_rs2_in,
-    output              icache_clr,
-    output              EXU_inst_clear,
-    output      [31:0]  dnpc,
-    output              dnpc_flag
+    input clock,
+    input reset,
+    input [31:0] mtvec_out,
+    input [31:0] mepc_out,
+    input [31:0] branch_pc,
+    input [31:0] Ex_result,
+    input [31:0] MEM_Ex_result,
+    input [31:0] MEM_Rdata,
+    input [31:0] IDU_rs1_value,
+    input [31:0] IDU_rs2_value,
+    input branch_flag,
+    input jump_flag,
+    input mret_flag,
+    input ecall_flag,
+    input MEM_mem_ren,
+    input fence_i_flag,
+    input [4:0] IDU_rs1,
+    input [4:0] IDU_rs2,
+    input IDU_valid,
+    input EXU_valid,
+    input MEM_valid,
+    input [4:0] EXU_rd,
+    input [4:0] MEM_rd,
+    input EXU_mem_ren,
+    input EXU_R_Wen,
+    input MEM_R_Wen,
+    input [31:0] WB_rd_value,
+    input [4:0] WB_rd,
+    input WB_R_Wen,
+    input WB_valid,
+    output IFU_stall,
+    output [31:0] EXU_rs1_in,
+    output [31:0] EXU_rs2_in,
+    output icache_clr,
+    output EXU_inst_clear,
+    output [31:0] dnpc,
+    output dnpc_flag
 );
 
 
-    wire [2:0] IDU_rs1_choice;
-    wire [2:0] IDU_rs2_choice;
+    logic [2:0] IDU_rs1_choice;
+    logic [2:0] IDU_rs2_choice;
 
 
 
-    wire branch_taken = branch_flag & Ex_result[0];
+    logic branch_taken;
+    assign branch_taken = branch_flag & Ex_result[0];
     assign dnpc_flag     = branch_taken ? 1'b1 : ((jump_flag | fence_i_flag) | (mret_flag | ecall_flag));
     assign EXU_inst_clear = branch_taken ? 1'b1 : (jump_flag | fence_i_flag | IFU_stall);
     assign IFU_stall     = EXU_mem_ren && (((EXU_rd == IDU_rs1) || (EXU_rd == IDU_rs2)) && (EXU_rd != 0));
@@ -89,4 +90,3 @@ Data_hazard Data_hazard_inst (
 );
 
 endmodule        //PC_Control
-

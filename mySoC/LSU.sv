@@ -6,50 +6,50 @@ module LSU (
     input clock,
     input reset,
 
-    input        mem_ren,
-    input        mem_wen,
-    input        R_wen,
-    input [ 3:0] csr_wen,
+    input mem_ren,
+    input mem_wen,
+    input R_wen,
+    input [3:0] csr_wen,
     input [31:0] Ex_result,
-    input [ 4:0] rd,
-    input [ 2:0] funct3,
+    input [4:0] rd,
+    input [2:0] funct3,
     input [31:0] rs2_value,
-    input        jump_flag,
+    input jump_flag,
     input [31:0] rd_value,
     input [31:0] pc,
 
 
-    output     [31:0] rd_value_next,
-    output            R_wen_next,
-    output     [31:0] LSU_Rdata,
-    output     [ 3:0] csr_wen_next,
-    output     [31:0] Ex_result_next,
-    output     [ 4:0] rd_next,
-    output            mem_ren_next,
-    output            jump_flag_next,
+    output [31:0] rd_value_next,
+    output R_wen_next,
+    output [31:0] LSU_Rdata,
+    output [3:0] csr_wen_next,
+    output [31:0] Ex_result_next,
+    output [4:0] rd_next,
+    output mem_ren_next,
+    output jump_flag_next,
 
-    output  logic [31:0]pc_out,
+    output logic [31:0] pc_out,
     output [31:0] addr,
-    output        wen,
+    output wen,
     output [31:0] wdata,
-    output [ 1:0] mask,
-    input  [31:0] rdata,
+    output [1:0] mask,
+    input [31:0] rdata,
 
-    input      valid_last,
+    input valid_last,
     output logic ready_last,
 
-    input      ready_next,
+    input ready_next,
     output logic valid_next
 
 
 );
 
-  wire [31:0] rdata_8i;
-  wire [31:0] rdata_16i;
-  wire [31:0] rdata_8u;
-  wire [31:0] rdata_16u;
+  logic [31:0] rdata_8i;
+  logic [31:0] rdata_16i;
+  logic [31:0] rdata_8u;
+  logic [31:0] rdata_16u;
 
-  wire [ 4:0] rdata_b_choice;
+  logic [ 4:0] rdata_b_choice;
 
   logic [31:0] rdata_ex;
   logic        mem_ren_reg;

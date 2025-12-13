@@ -1,51 +1,51 @@
 `include "para.sv"
 
 module EXU (
-    input               clock,
-    input               reset,
+    input clock,
+    input reset,
 
-    input               EXU_inst_clr,
-    input       [3:0]    csr_wen,
-    input               R_wen,
-    input               mem_wen,
-    input               mem_ren,
-    input       [4:0]   rd,
-    input       [2:0]   funct3,
-    input       [31:0]  pc,
+    input EXU_inst_clr,
+    input [3:0] csr_wen,
+    input R_wen,
+    input mem_wen,
+    input mem_ren,
+    input [4:0] rd,
+    input [2:0] funct3,
+    input [31:0] pc,
 
-    input       [3:0]   alu_opcode,
-    input               inv_flag,
-    input               jump_flag,
-    input               branch_flag,
-    input               fetch_i_flag,
+    input [3:0] alu_opcode,
+    input inv_flag,
+    input jump_flag,
+    input branch_flag,
+    input fetch_i_flag,
 
-    input       [31:0]  branch_pc,
-    input       [31:0]  rs2_value,
-    input       [31:0]  add1,
-    input       [31:0]  add2,
-    input       [31:0]  rd_value,
+    input [31:0] branch_pc,
+    input [31:0] rs2_value,
+    input [31:0] add1,
+    input [31:0] add2,
+    input [31:0] rd_value,
 
-    output      [31:0]  branch_pc_next,
-    output      [31:0]  rd_value_next,
-    output              fetch_i_flag_next,
-    output              branch_flag_next,
-    output              jump_flag_next,
-    output      [2:0]   funct3_next,
-    output      [31:0]  rs2_value_next,
-    output      [4:0]   rd_next,
-    output      [3:0]   csr_wen_next,
-    output              R_wen_next,
-    output              mem_wen_next,
-    output              mem_ren_next,
-    output      [31:0]  EX_result,
+    output [31:0] branch_pc_next,
+    output [31:0] rd_value_next,
+    output fetch_i_flag_next,
+    output branch_flag_next,
+    output jump_flag_next,
+    output [2:0] funct3_next,
+    output [31:0] rs2_value_next,
+    output [4:0] rd_next,
+    output [3:0] csr_wen_next,
+    output R_wen_next,
+    output mem_wen_next,
+    output mem_ren_next,
+    output [31:0] EX_result,
     output logic [31:0] pc_out,
 
-    input               valid_last,
-    output              ready_last,
+    input valid_last,
+    output ready_last,
 
 
-    input               ready_next,
-    output logic        valid_next
+    input ready_next,
+    output logic valid_next
 );
 
 
@@ -143,7 +143,7 @@ always_ff @(posedge clock) begin
 end
 
 
-    wire [31:0] alu_res;
+    logic [31:0] alu_res;
     
 
     assign jump_flag_next              = jump_flag_reg;

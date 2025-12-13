@@ -13,18 +13,18 @@ module IDU(
 
     input [31:0] rd_value,
     input [31:0] csrd,
-    input [4:0]  rd,
-    input        R_wen,
-    input [3:0]  csr_wen,
+    input [4:0] rd,
+    input R_wen,
+    input [3:0] csr_wen,
 
     input [31:0] EXU_rs1_in,
     input [31:0] EXU_rs2_in,
 
     output [4:0] rd_next,
     output [2:0] funct3,
-    output       mret_flag,
-    output       ecall_flag,
-    output       fence_i_flag,
+    output mret_flag,
+    output ecall_flag,
+    output fence_i_flag,
 
     output [31:0] branch_pc,
     output [31:0] rs1_value,
@@ -32,8 +32,8 @@ module IDU(
     
     output [31:0] add1_value,
     output [31:0] add2_value,
-    output [3:0]  csr_wen_next,
-    output        R_wen_next,
+    output [3:0] csr_wen_next,
+    output R_wen_next,
     output [31:0] rd_value_next,
 
     output        mem_wen,
@@ -42,10 +42,10 @@ module IDU(
     output        branch_flag,
     output        jump_flag,
 
-    output [3:0]  alu_opcode,
+    output [3:0] alu_opcode,
 
-    output [4:0]  rs1,
-    output [4:0]  rs2,
+    output [4:0] rs1,
+    output [4:0] rs2,
     output [31:0] a0_value,
     output [31:0] mepc_out,
     output [31:0] mtvec_out,
@@ -82,18 +82,18 @@ module IDU(
         end
     end
 
-    wire [31:0] csr_addr;
-    wire [6:0] oprand;
-    wire [6:0] opcode;
+    logic [31:0] csr_addr;
+    logic [6:0] oprand;
+    logic [6:0] opcode;
 
-    wire [31:0] imm_I;
-    wire [31:0] imm_U;
-    wire [31:0] imm_R;
-    wire [31:0] imm_S;
-    wire [31:0] imm_B;
-    wire [31:0] imm_J;
-    wire [31:0] csrs;
-    wire [31:0] imm;
+    logic [31:0] imm_I;
+    logic [31:0] imm_U;
+    logic [31:0] imm_R;
+    logic [31:0] imm_S;
+    logic [31:0] imm_B;
+    logic [31:0] imm_J;
+    logic [31:0] csrs;
+    logic [31:0] imm;
 
     assign oprand                      = inst[31:25];
     assign opcode                      = inst[6:0];
@@ -111,16 +111,26 @@ module IDU(
     assign csr_wen_next[2]             = (opcode == `M_opcode && imm == 32'h300);
     assign csr_wen_next[3]             = (opcode == `M_opcode && imm == 32'h305);
 
-    wire is_S  = (opcode == `S_opcode);
-    wire is_I0 = (opcode == `I0_opcode);
-    wire is_U0 = (opcode == `U0_opcode);
-    wire is_U1 = (opcode == `U1_opcode);
-    wire is_J  = (opcode == `J_opcode);
-    wire is_I2 = (opcode == `I2_opcode);
-    wire is_I1 = (opcode == `I1_opcode);
-    wire is_R  = (opcode == `R_opcode);
-    wire is_B  = (opcode == `B_opcode);
-    wire is_M  = (opcode == `M_opcode);
+    logic is_S;
+    logic is_I0;
+    logic is_U0;
+    logic is_U1;
+    logic is_J;
+    logic is_I2;
+    logic is_I1;
+    logic is_R;
+    logic is_B;
+    logic is_M;
+    assign is_S  = (opcode == `S_opcode);
+    assign is_I0 = (opcode == `I0_opcode);
+    assign is_U0 = (opcode == `U0_opcode);
+    assign is_U1 = (opcode == `U1_opcode);
+    assign is_J  = (opcode == `J_opcode);
+    assign is_I2 = (opcode == `I2_opcode);
+    assign is_I1 = (opcode == `I1_opcode);
+    assign is_R  = (opcode == `R_opcode);
+    assign is_B  = (opcode == `B_opcode);
+    assign is_M  = (opcode == `M_opcode);
 
     assign R_wen_next                  = (is_S || is_B || opcode == 0)? 1'b0:1'b1;
     assign mem_wen                     = is_S;
@@ -148,31 +158,42 @@ module IDU(
                         (is_M && funct3 == 3'b001)? 0 : imm;
  
 
-    wire cond_add = is_S || is_I0 || is_U0 || is_U1 || is_J || is_I2
+    logic cond_add;
+    logic cond_signed_cmp;
+    logic cond_unsigned_cmp;
+    logic cond_xor;
+    logic cond_or;
+    logic cond_and;
+    logic cond_sll;
+    logic cond_srl;
+    logic cond_sra;
+    logic cond_sub;
+    logic cond_equal;
+    assign cond_add = is_S || is_I0 || is_U0 || is_U1 || is_J || is_I2
                  || (is_I1 && funct3 == 3'b000)
                  || (is_R  && funct3 == 3'b000 && oprand[5] == 1'b0)
                  || (is_B  && funct3[2:1] == 2'b01);
-    wire cond_signed_cmp = (is_I1 && funct3 == 3'b010)
+    assign cond_signed_cmp = (is_I1 && funct3 == 3'b010)
                         || (is_R  && funct3 == 3'b010)
                         || (is_B  && (funct3 == 3'b101 || funct3 == 3'b100));
-    wire cond_unsigned_cmp = (is_B  && (funct3 == 3'b110 || funct3 == 3'b111))
+    assign cond_unsigned_cmp = (is_B  && (funct3 == 3'b110 || funct3 == 3'b111))
                           || (is_I1 && funct3 == 3'b011)
                           || (is_R  && funct3 == 3'b011);
-    wire cond_xor = (is_I1 && funct3 == 3'b100)
+    assign cond_xor = (is_I1 && funct3 == 3'b100)
                  || (is_R  && funct3 == 3'b100);
-    wire cond_or = (is_I1 && funct3 == 3'b110)
+    assign cond_or = (is_I1 && funct3 == 3'b110)
                 || (is_R  && funct3 == 3'b110)
                 || (is_M  && funct3 == 3'b010);
-    wire cond_and = (is_I1 && funct3 == 3'b111)
+    assign cond_and = (is_I1 && funct3 == 3'b111)
                  || (is_R  && funct3 == 3'b111);
-    wire cond_sll = (is_I1 && funct3 == 3'b001)
+    assign cond_sll = (is_I1 && funct3 == 3'b001)
                  || (is_R  && funct3 == 3'b001);
-    wire cond_srl = (is_I1 && funct3 == 3'b101 && oprand[5] == 1'b0)
+    assign cond_srl = (is_I1 && funct3 == 3'b101 && oprand[5] == 1'b0)
                  || (is_R  && funct3 == 3'b101 && oprand[5] == 1'b0);
-    wire cond_sra = (is_I1 && funct3 == 3'b101 && oprand[5] == 1'b1)
+    assign cond_sra = (is_I1 && funct3 == 3'b101 && oprand[5] == 1'b1)
                  || (is_R  && funct3 == 3'b101 && oprand[5] == 1'b1);
-    wire cond_sub = (is_R  && funct3 == 3'b000 && oprand[5] == 1'b1);
-    wire cond_equal = (is_B && funct3[2:1] == 2'b00);
+    assign cond_sub = (is_R  && funct3 == 3'b000 && oprand[5] == 1'b1);
+    assign cond_equal = (is_B && funct3[2:1] == 2'b00);
 
     assign alu_opcode = cond_add ? `alu_add :
                         cond_signed_cmp ? `alu_signed_comparator :

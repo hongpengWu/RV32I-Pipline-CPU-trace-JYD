@@ -22,94 +22,94 @@ module myCPU (
 
 );
 
-  wire [31:0] IFU_inst;
-  wire        IFU_valid;
-  wire [31:0] IFU_pc;
-  wire [31:0] IFU_snpc;
+  logic [31:0] IFU_inst;
+  logic        IFU_valid;
+  logic [31:0] IFU_pc;
+  logic [31:0] IFU_snpc;
 
   /************************* IDU ********************/
-  wire [31:0] IDU_pc;
-  wire [ 4:0] IDU_rd;
-  wire [ 2:0] IDU_funct3;
-  wire        IDU_mret_flag;
-  wire        IDU_ecall_flag;
-  wire [31:0] IDU_rs2_value;
-  wire [31:0] IDU_rs1_value;
-  wire [ 3:0] IDU_csr_wen;
-  wire        IDU_R_wen;
-  wire [31:0] IDU_rd_value;
-  wire        IDU_mem_wen;
-  wire        IDU_mem_ren;
+  logic [31:0] IDU_pc;
+  logic [ 4:0] IDU_rd;
+  logic [ 2:0] IDU_funct3;
+  logic        IDU_mret_flag;
+  logic        IDU_ecall_flag;
+  logic [31:0] IDU_rs2_value;
+  logic [31:0] IDU_rs1_value;
+  logic [ 3:0] IDU_csr_wen;
+  logic        IDU_R_wen;
+  logic [31:0] IDU_rd_value;
+  logic        IDU_mem_wen;
+  logic        IDU_mem_ren;
 
-  wire        IDU_inv_flag;
-  wire        IDU_branch_flag;
-  wire        IDU_jump_flag;
-  wire [31:0] IDU_add1_value;
-  wire [31:0] IDU_add2_value;
-  wire [ 3:0] IDU_alu_opcode;
-  wire [ 4:0] IDU_rs1;
-  wire [ 4:0] IDU_rs2;
-  wire [31:0] IDU_a0_value;
-  wire [31:0] IDU_mepc_out;
-  wire [31:0] IDU_mtvec_out;
+  logic        IDU_inv_flag;
+  logic        IDU_branch_flag;
+  logic        IDU_jump_flag;
+  logic [31:0] IDU_add1_value;
+  logic [31:0] IDU_add2_value;
+  logic [ 3:0] IDU_alu_opcode;
+  logic [ 4:0] IDU_rs1;
+  logic [ 4:0] IDU_rs2;
+  logic [31:0] IDU_a0_value;
+  logic [31:0] IDU_mepc_out;
+  logic [31:0] IDU_mtvec_out;
 
-  wire [31:0] IDU_branch_pc;
-  wire        IDU_valid;
-  wire        IDU_ready;
-  wire        IDU_fence_i_flag;
+  logic [31:0] IDU_branch_pc;
+  logic        IDU_valid;
+  logic        IDU_ready;
+  logic        IDU_fence_i_flag;
   /************************* EXU ********************/
-  wire [31:0] EXU_branch_pc;
-  wire        EXU_jump_flag;
-  wire [ 2:0] EXU_funct3;
-  wire [31:0] EXU_rs2_value;
-  wire [ 4:0] EXU_rd;
-  wire [31:0] EXU_rd_value;
-  wire [ 3:0] EXU_csr_wen;
-  wire        EXU_R_wen;
-  wire        EXU_mem_wen;
-  wire        EXU_mem_ren;
-  wire [31:0] EXU_pc;
-  wire [31:0] EXU_Ex_result;
-  wire        EXU_branch_flag;
-  wire [31:0] EXU_rs1_in;
-  wire [31:0] EXU_rs2_in;
-  wire        EXU_fence_i_flag;
+  logic [31:0] EXU_branch_pc;
+  logic        EXU_jump_flag;
+  logic [ 2:0] EXU_funct3;
+  logic [31:0] EXU_rs2_value;
+  logic [ 4:0] EXU_rd;
+  logic [31:0] EXU_rd_value;
+  logic [ 3:0] EXU_csr_wen;
+  logic        EXU_R_wen;
+  logic        EXU_mem_wen;
+  logic        EXU_mem_ren;
+  logic [31:0] EXU_pc;
+  logic [31:0] EXU_Ex_result;
+  logic        EXU_branch_flag;
+  logic [31:0] EXU_rs1_in;
+  logic [31:0] EXU_rs2_in;
+  logic        EXU_fence_i_flag;
 
-  wire        EXU_valid;
-  wire        EXU_ready;
+  logic        EXU_valid;
+  logic        EXU_ready;
   /************************* LSU ********************/
-  wire        LSU_jump_flag;
-  wire        LSU_R_wen;
-  wire [31:0] LSU_Rdata;
-  wire [ 3:0] LSU_csr_wen;
-  wire [31:0] LSU_Ex_result;
-  wire [31:0] LSU_rd_value;
-  wire [31:0] LSU_pc;
+  logic        LSU_jump_flag;
+  logic        LSU_R_wen;
+  logic [31:0] LSU_Rdata;
+  logic [ 3:0] LSU_csr_wen;
+  logic [31:0] LSU_Ex_result;
+  logic [31:0] LSU_rd_value;
+  logic [31:0] LSU_pc;
 
-  wire [ 4:0] LSU_rd;
-  wire        LSU_mem_ren;
-  wire        LSU_ready;
-  wire        LSU_vaild;
+  logic [ 4:0] LSU_rd;
+  logic        LSU_mem_ren;
+  logic        LSU_ready;
+  logic        LSU_vaild;
 
   /************************* WBU ********************/
-  wire [31:0] WBU_pc;
-  wire [31:0] WBU_inst;
-  wire [31:0] WBU_rd_value;
-  wire [31:0] WBU_csrd;
-  wire [ 4:0] WBU_rd;
-  wire        WBU_R_wen;
-  wire [ 3:0] WBU_csr_wen;
-  wire        WBU_ready;
-  wire        WBU_valid;
-  wire        LSU_valid;
+  logic [31:0] WBU_pc;
+  logic [31:0] WBU_inst;
+  logic [31:0] WBU_rd_value;
+  logic [31:0] WBU_csrd;
+  logic [ 4:0] WBU_rd;
+  logic        WBU_R_wen;
+  logic [ 3:0] WBU_csr_wen;
+  logic        WBU_ready;
+  logic        WBU_valid;
+  logic        LSU_valid;
 
   /*            PERSONAL              */
 
-  wire        dnpc_flag;
-  wire        EXU_inst_clear;
-  wire [31:0] dnpc;
-  wire IFU_stall;
-  wire icache_clr;
+  logic        dnpc_flag;
+  logic        EXU_inst_clear;
+  logic [31:0] dnpc;
+  logic IFU_stall;
+  logic icache_clr;
 
   assign irom_addr = IFU_pc;
 
@@ -136,7 +136,7 @@ assign debug_wb_value = WBU_rd_value;
   );
 
 
-  wire [31:0] MEM_forward_val;
+  logic [31:0] MEM_forward_val;
   assign MEM_forward_val = (LSU_jump_flag | (|LSU_csr_wen)) ? LSU_rd_value : LSU_Ex_result;
 
   Control Control_inst0 (
@@ -364,4 +364,3 @@ assign debug_wb_value = WBU_rd_value;
   );
 
 endmodule
-
