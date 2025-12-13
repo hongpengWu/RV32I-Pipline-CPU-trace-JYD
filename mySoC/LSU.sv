@@ -49,8 +49,6 @@ module LSU (
   logic [31:0] rdata_8u;
   logic [31:0] rdata_16u;
 
-  logic [ 4:0] rdata_b_choice;
-
   logic [31:0] rdata_ex;
   logic        mem_ren_reg;
   logic        mem_wen_reg;
@@ -65,9 +63,13 @@ module LSU (
   logic        valid_last_reg;
 
   always_ff @(posedge clock) begin
-    if (reset) valid_next <= 1'b0;
-    else valid_next <= valid_last;
-
+    if (reset) begin
+      valid_next <= 1'b0;
+    end else if (valid_last & ready_last) begin
+      valid_next <= 1'b1;
+    end else begin
+      valid_next <= 1'b0;
+    end
   end
   always_ff @(posedge clock) begin
     if (reset) pc_out <= 0;
@@ -166,4 +168,4 @@ module LSU (
 
 
 
-endmodule  //MEM
+  endmodule  //MEM

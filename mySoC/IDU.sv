@@ -59,26 +59,44 @@ module IDU(
     output logic valid_next
 );
 
-    logic [31:0] inst ;
-    logic [31:0] snpc ;
-    logic [31:0] pc ;
-    logic valid ;
+    logic [31:0] inst;
+    logic [31:0] snpc;
+    logic [31:0] pc;
+    logic        valid;
+
+    logic [31:0] inst_d;
+    logic [31:0] snpc_d;
+    logic [31:0] pc_d;
+    logic        valid_d;
 
     assign ready_last = ready_next && !stall;
-    assign valid_next = valid;
+    assign valid_next = valid_d;
 
     always_ff @(posedge clock) begin
-        if(reset || flush) begin
-            inst <= 32'h00000013;
-            snpc <= 0;
-            pc <= 0;
+        if (reset || flush) begin
+            inst  <= 32'h00000013;
+            snpc  <= 0;
+            pc    <= 0;
             valid <= 0;
-        end
-        else if(ready_next && !stall) begin
-            inst <= inst_in;
-            snpc <= snpc_in;
-            pc <= pc_in;
+        end else if (ready_next && !stall) begin
+            inst  <= inst_in;
+            snpc  <= snpc_in;
+            pc    <= pc_in;
             valid <= valid_last;
+        end
+    end
+
+    always_ff @(posedge clock) begin
+        if (reset || flush) begin
+            inst_d  <= 32'h00000013;
+            snpc_d  <= 0;
+            pc_d    <= 0;
+            valid_d <= 0;
+        end else if (ready_next && !stall) begin
+            inst_d  <= inst;
+            snpc_d  <= snpc;
+            pc_d    <= pc;
+            valid_d <= valid;
         end
     end
 
@@ -95,16 +113,16 @@ module IDU(
     logic [31:0] csrs;
     logic [31:0] imm;
 
-    assign oprand                      = inst[31:25];
-    assign opcode                      = inst[6:0];
-    assign rs1                         = inst[19:15];
-    assign rs2                         = inst[24:20];
-    assign funct3                      = inst[14:12];
-    assign rd_next                     = inst[11:7];
+    assign oprand                      = inst_d[31:25];
+    assign opcode                      = inst_d[6:0];
+    assign rs1                         = inst_d[19:15];
+    assign rs2                         = inst_d[24:20];
+    assign funct3                      = inst_d[14:12];
+    assign rd_next                     = inst_d[11:7];
 
-    assign ecall_flag                  = (inst == 32'b00000000000000000000000001110011);//ecall
-    assign mret_flag                   = (inst == 32'b00110000001000000000000001110011);// mret
-    assign fence_i_flag                = (inst == 32'b00000000000000000001000000001111);
+    assign ecall_flag                  = (inst_d == 32'b00000000000000000000000001110011);
+    assign mret_flag                   = (inst_d == 32'b00110000001000000000000001110011);
+    assign fence_i_flag                = (inst_d == 32'b00000000000000000001000000001111);
  
     assign csr_wen_next[0]             = (opcode == `M_opcode && imm == 32'h341);
     assign csr_wen_next[1]             = (opcode == `M_opcode && imm == 32'h342);
@@ -143,19 +161,25 @@ module IDU(
  
     assign csr_addr                    = imm;
 
-    assign rd_value_next               = jump_flag? snpc: 
-                                                                    (|csr_wen_next)? csrs:
-                                                                    0;
-    assign branch_pc                   = pc + imm;
-    assign pc_out  = pc;
+    assign rd_value_next               = jump_flag ? snpc_d :
+                                         (|csr_wen_next) ? csrs :
+                                         0;
+    assign branch_pc                   = pc_d + imm;
+    assign pc_out  = pc_d;
 
-    assign add1_value = (is_U0)? 0 :
-                        (is_J || is_U1)? pc :
-                        EXU_rs1_in;
+    logic [31:0] add_src1;
+    logic [31:0] add_src2;
 
-    assign add2_value = (is_R || is_B)?  EXU_rs2_in :
-                        (is_M && funct3 == 3'b010)? rd_value_next :
-                        (is_M && funct3 == 3'b001)? 0 : imm;
+    assign add_src1 = is_U0 ? 32'd0 :
+                      (is_J || is_U1) ? pc_d :
+                      EXU_rs1_in;
+
+    assign add_src2 = (is_R || is_B) ? EXU_rs2_in :
+                      (is_M && funct3 == 3'b010) ? rd_value_next :
+                      (is_M && funct3 == 3'b001) ? 32'd0 : imm;
+
+    assign add1_value = add_src1;
+    assign add2_value = add_src2;
  
 
     logic cond_add;
@@ -208,12 +232,12 @@ module IDU(
                         cond_equal ? `alu_equal : `alu_add;
 
 
-    assign imm_I                       = {{20{inst[31]}},inst[31:20]};
-    assign imm_U                       = {inst[31:12],12'd0};
-    assign imm_R                       = {25'd0,inst[31:25]};
-    assign imm_S                       = {{20{inst[31]}},inst[31:25],inst[11:7]};
+    assign imm_I                       = {{20{inst_d[31]}},inst_d[31:20]};
+    assign imm_U                       = {inst_d[31:12],12'd0};
+    assign imm_R                       = {25'd0,inst_d[31:25]};
+    assign imm_S                       = {{20{inst_d[31]}},inst_d[31:25],inst_d[11:7]};
     assign imm_B                       = {imm_S[31:11],imm_S[0],imm_S[10:1]}<<1;
-    assign imm_J                       = {{11{inst[31]}},inst[31],inst[19:12],inst[20],inst[30:21]}<<1;
+    assign imm_J                       = {{11{inst_d[31]}},inst_d[31],inst_d[19:12],inst_d[20],inst_d[30:21]}<<1;
 /* verilator lint_off IMPLICIT */
 
     assign imm = (opcode == `I0_opcode || opcode == `I1_opcode || opcode == `I2_opcode || opcode == `M_opcode)? imm_I:

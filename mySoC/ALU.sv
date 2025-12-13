@@ -4,7 +4,6 @@
 module ALU #(
     parameter BW = 32
 ) (
-    input clock,
     input      [BW-1:0] d1,
     input      [BW-1:0] d2,
     input      [3:0]    choice,
@@ -12,7 +11,7 @@ module ALU #(
 );
 
     logic choose_add_sub;
-    logic [BW-1:0]       result;
+    logic [BW-1:0]       add_result;
     logic [BW-1:0]       d2_inv;
     logic [BW-1:0]       d1_inv;
     assign d2_inv = ~d2;
@@ -23,11 +22,8 @@ module ALU #(
         unique case (choice)
             `alu_signed_comparator: begin
                 choose_add_sub = 1'b1;
-                if (d1[BW-1] != d2[BW-1]) begin
-                    res[0] = d1[BW-1];
-                end else begin
-                    res[0] = result[BW-1];
-                end
+                res = '0;
+                res[0] = (d1[BW-1] != d2[BW-1]) ? d1[BW-1] : add_result[BW-1];
             end
             `alu_unsigned_comparator: begin
                 choose_add_sub = 1'b0;
@@ -35,11 +31,11 @@ module ALU #(
             end
             `alu_add: begin
                 choose_add_sub = 1'b0;
-                res = result;
+                res = add_result;
             end
             `alu_sub: begin
                 choose_add_sub = 1'b1;
-                res = result;
+                res = add_result;
             end
             `alu_and: begin
                 res = d1 & d2;
@@ -55,6 +51,7 @@ module ALU #(
             end
             `alu_equal: begin
                 choose_add_sub = 1'b0;
+                res = '0;
                 res[0] = (d1 != d2);
             end
             `alu_sll: begin
@@ -83,7 +80,7 @@ module ALU #(
         .add_1          (d1),
         .add_2          (d2),
         .add_2_inv      (d2_inv),
-        .result         (result)
+        .result         (add_result)
     );
 
 endmodule

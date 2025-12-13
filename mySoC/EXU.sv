@@ -165,8 +165,7 @@ end
 /* verilator lint_off PINMISSING */
 ALU #(
     .BW(32) 
-) ALU_i0
-(
+) ALU_i0 (
     .d1(add1_reg),
     .d2(add2_reg),
     .choice(alu_opcode_reg),
