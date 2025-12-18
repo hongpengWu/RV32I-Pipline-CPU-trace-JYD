@@ -91,8 +91,8 @@ module EXU (
             alu_opcode_reg  <= 0;
             inv_flag_reg    <= 0;
             rs2_value_reg   <= 0;
-            add1_reg   <= 0;
-            add2_reg   <= 0;
+            add1_reg        <= 0;
+            add2_reg        <= 0;
             rd_value_reg    <= 0;
             branch_pc_reg   <= 0;
             pc_out <= 0;

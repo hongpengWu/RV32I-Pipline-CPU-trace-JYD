@@ -44,104 +44,81 @@ module LSU (
 
 );
 
+  logic        mem_ren_reg;
+  logic        mem_wen_reg;
+  logic        R_wen_reg;
+  logic [3:0]  csr_wen_reg;
+  (* max_fanout = 50 *) logic [31:0] Ex_result_reg;
+  logic [4:0]  rd_reg;
+  logic [2:0]  funct3_reg;
+  logic [31:0] rs2_value_reg;
+  logic        jump_flag_reg;
+  logic [31:0] rd_value_reg;
+  logic [31:0] pc_reg;
+  logic        valid_reg;
+
   logic [31:0] rdata_8i;
   logic [31:0] rdata_16i;
   logic [31:0] rdata_8u;
   logic [31:0] rdata_16u;
 
   logic [31:0] rdata_ex;
-  logic        mem_ren_reg;
-  logic        mem_wen_reg;
-  logic        R_wen_reg;
-  logic [ 3:0] csr_wen_reg;
-  logic [31:0] Ex_result_reg;
-  logic [31:0] rd_value_reg;
-  logic [ 4:0] rd_reg;
-  logic [ 2:0] funct3_reg;
-  logic [31:0] rs2_value_reg;
-  logic        jump_flag_reg;
-  logic        valid_last_reg;
+
+  assign ready_last = ready_next;
+  assign valid_next = valid_reg;
+
+  assign addr  = Ex_result_reg;
+  assign wdata = rs2_value_reg;
+  assign mask  = funct3_reg[1:0];
+  assign wen   = mem_wen_reg;
+
+  assign LSU_Rdata      = rdata_ex;
+  assign Ex_result_next = Ex_result_reg;
+  assign rd_value_next  = rd_value_reg;
+  assign rd_next        = rd_reg;
+  assign mem_ren_next   = mem_ren_reg;
+  assign R_wen_next     = R_wen_reg;
+  assign jump_flag_next = jump_flag_reg;
+  assign csr_wen_next   = csr_wen_reg;
+  assign pc_out         = pc_reg;
 
   always_ff @(posedge clock) begin
     if (reset) begin
-      valid_next <= 1'b0;
-    end else if (valid_last & ready_last) begin
-      valid_next <= 1'b1;
-    end else begin
-      valid_next <= 1'b0;
-    end
-  end
-  always_ff @(posedge clock) begin
-    if (reset) pc_out <= 0;
-    else if (ready_last & valid_last) pc_out <= pc;
-  end
-
-
-
-  always_ff @(posedge clock) begin
-    if (reset) begin
-      mem_ren_reg   <= 0;
-      mem_wen_reg   <= 0;
-      R_wen_reg     <= 0;
-      csr_wen_reg   <= 0;
-      Ex_result_reg <= 0;
-      rd_value_reg  <= 0;
-      rd_reg        <= 0;
-      funct3_reg    <= 0;
-      rs2_value_reg <= 0;
-      jump_flag_reg <= 0;
-
-    end else if (valid_last & ready_last) begin
+      mem_ren_reg   <= 1'b0;
+      mem_wen_reg   <= 1'b0;
+      R_wen_reg     <= 1'b0;
+      csr_wen_reg   <= 4'b0;
+      Ex_result_reg <= 32'b0;
+      rd_reg        <= 5'b0;
+      funct3_reg    <= 3'b0;
+      rs2_value_reg <= 32'b0;
+      jump_flag_reg <= 1'b0;
+      rd_value_reg  <= 32'b0;
+      pc_reg        <= 32'b0;
+      valid_reg     <= 1'b0;
+    end else if (ready_next) begin
       mem_ren_reg   <= mem_ren;
       mem_wen_reg   <= mem_wen;
       R_wen_reg     <= R_wen;
       csr_wen_reg   <= csr_wen;
       Ex_result_reg <= Ex_result;
-      rd_value_reg  <= rd_value;
       rd_reg        <= rd;
       funct3_reg    <= funct3;
       rs2_value_reg <= rs2_value;
       jump_flag_reg <= jump_flag;
+      rd_value_reg  <= rd_value;
+      pc_reg        <= pc;
+      valid_reg     <= valid_last;
     end
   end
 
-  assign ready_last     = ready_next;
-  assign addr           = Ex_result_reg;
-  assign wdata          = rs2_value_reg;
-  assign LSU_Rdata      = rdata_ex;
-  assign wen            = mem_wen_reg;
-
-
-  assign mask           = funct3_reg[1:0];
-
-
-
-
-
-
-
-
-
-  assign Ex_result_next = Ex_result_reg;
-  assign rd_value_next  = rd_value_reg;
-  assign rd_next        = rd_reg;
-  assign mem_ren_next   = mem_ren_reg;
-
-  assign R_wen_next     = R_wen_reg;
-  assign jump_flag_next = jump_flag_reg;
-  assign csr_wen_next   = csr_wen_reg;
-
-
-
-
-
   always @(*) begin
     case (funct3_reg)
-      3'b000:  rdata_ex = rdata_8i;  // lb
-      3'b001:  rdata_ex = rdata_16i;  // lh
-      3'b010:  rdata_ex = rdata;  // lw
-      3'b100:  rdata_ex = rdata_8u;  // lbu
-      3'b101:  rdata_ex = rdata_16u;  // lhu
+      3'b000:  rdata_ex = rdata_8i;
+      3'b001:  rdata_ex = rdata_16i;
+      3'b010:  rdata_ex = rdata;
+      3'b100:  rdata_ex = rdata_8u;
+      3'b101:  rdata_ex = rdata_16u;
       default: rdata_ex = 0;
     endcase
   end
@@ -167,5 +144,4 @@ module LSU (
   );
 
 
-
-  endmodule  //MEM
+endmodule  //MEM
