@@ -4,103 +4,104 @@
 
 ## 📁 目录结构
 
-| 目录 | 说明 | 架构特点 |
-| :--- | :--- | :--- |
-| **`CPU/`** | **原始参赛版本** | 经典 **3级流水线** (IF, ID/EX, MEM/WB) |
-| **`cdp-tests/`** | **深度优化版本** | 高频 **5级+流水线** (IF, ID, EX, MEM1/2/3, WB) |
+以下展示了两个核心目录的主要文件结构：
 
----
-
-## 🏗️ 架构演进与详细设计
-
-### 1. 原始版本 (`CPU/`)
-该版本为比赛初期的基础设计，采用紧凑的三级流水线架构，主要用于验证 RV32I 指令集的功能正确性。
-
-- **流水线级数**：3级
-  - **IF (取指)**：PC 更新与指令读取。
-  - **ID+EX (译码与执行)**：指令译码、操作数读取、ALU 运算在同一周期完成。
-  - **MEM+WB (访存与写回)**：数据存储器读写与寄存器堆写回在同一周期完成。
-- **特点**：
-  - 结构简单，控制逻辑开销小。
-  - 关键路径较长（ID+EX 级逻辑深度大），限制了最高运行频率。
-
-### 2. 扩展优化版本 (`cdp-tests/`)
-该版本在原始设计基础上进行了架构重构，旨在提升时序性能（Frequency）和吞吐率。通过流水线切分和关键路径优化，显著提高了处理器的综合频率。
-
-- **流水线级数**：5级 (扩展至多级 MEM)
-  - **IF (取指)**
-  - **ID (译码)**
-  - **EX (执行)**
-  - **MEM (访存 - 流水线化)**：将访存阶段进一步细分为 `MEM1`, `MEM2`, `MEM3`，以适应高扇出和长路径延迟。
-  - **WB (写回)**
-- **核心优化点**：
-  1.  **流水线深度切分**：将原有的 `ID+EX` 拆解，并将 `MEM` 阶段流水线化。
-  2.  **关键路径优化 (Critical Path Optimization)**：
-      - 针对 Vivado 时序报告中的高扇出网表（如 `Ex_result_addr_reg`），在 `LSU` 模块中引入了多级寄存器复制（Register Replication）。
-      - 使用 `(* max_fanout = N *)` 综合属性，强制工具进行物理优化，降低路由延迟。
-  3.  **高级冲突处理**：
-      - 实现了完整的 **数据前递 (Data Forwarding)** 单元，解决 RAW 相关。
-      - 增加了 **Load-Use 冒险检测**，支持流水线气泡插入（Stall）。
-      - 优化了分支预测失败的流水线冲刷（Flush）机制。
-  4.  **BRAM 适配准备**：架构上已预留对同步读 Block RAM 的支持（通过多级 MEM 延迟槽）。
-
----
-
-## 🚀 快速开始
-
-### 环境要求
-- **OS**: Linux (推荐 Ubuntu/CentOS)
-- **EDA**: Vivado 2023.2 或更高版本
-- **Simulation**: Verilator (可选，用于 C++ 仿真) 或 Vivado Simulator
-- **Python**: Python 3.x (用于运行测试脚本)
-
-### 运行测试
-本项目集成了自动化测试脚本，可一键运行所有指令测试用例。
-
-1. **编译与运行**
-   进入优化版本目录：
-   ```bash
-   cd cdp-tests
-   ```
-
-2. **执行测试**
-   使用 `make` 编译仿真模型并运行 Python 测试脚本：
-   ```bash
-   make clean && make
-   python run_all_tests.py
-   ```
-   *脚本将自动比对 Golden Model，并输出每个测试点（Testcase）的 Pass/Fail 状态。*
-
----
-
-## 🛠️ 技术细节 (Technical Highlights)
-
-### LSU (Load Store Unit) 的深度优化
-在 `mySoC/LSU.sv` 中，为了解决地址总线的高扇出延迟问题，我们实施了以下改进：
-
-```systemverilog
-// 示例：使用 max_fanout 属性优化关键路径寄存器
-(* max_fanout = 32 *) logic [31:0] Ex_result_addr_reg;
-(* max_fanout = 8 *)  logic [31:0] Ex_result_addr_reg_pipe;
-
-// 三级流水线处理，平摊逻辑延迟
-always_ff @(posedge clock) begin
-    // Stage 1
-    Ex_result_addr_reg <= ...;
-    // Stage 2
-    Ex_result_addr_reg_pipe <= Ex_result_addr_reg;
-    // Stage 3 (Output)
-    addr <= {Ex_result_addr_reg_pipe[31:18], ...};
-end
+```text
+.
+├── CPU/                        # [原始版本] 三级流水线处理器设计
+│   ├── myCPU.sv                # 处理器顶层模块
+│   ├── Control.sv              # 集中式控制单元
+│   ├── Data_hazard.sv          # 基础数据冲突检测
+│   ├── IFU.sv                  # 取指单元 (Instruction Fetch)
+│   ├── IDU.sv                  # 译码单元 (Instruction Decode)
+│   ├── EXU.sv                  # 执行单元 (Execute)
+│   ├── LSU.sv                  # 访存单元 (Load Store)
+│   ├── WBU.sv                  # 写回单元 (Write Back)
+│   ├── IFID_EX_Reg.sv          # 流水线寄存器：IF -> ID/EX
+│   ├── EX_LSWB_Reg.sv          # 流水线寄存器：EX -> MEM/WB
+│   └── ... (其他辅助模块：ALU, CSR, RegFile 等)
+│
+├── cdp-tests/                  # [优化版本] 五级流水线 SoC 及验证环境
+│   ├── mySoC/                  # 核心 SoC 代码目录
+│   │   ├── myCPU.sv            # 更新后的处理器顶层
+│   │   ├── LSU.sv              # 深度优化的流水线化访存单元
+│   │   ├── Data_hazard.sv      # 增强型冲突检测单元
+│   │   ├── miniRV_SoC.v        # SoC 顶层集成封装
+│   │   ├── dram_driver.sv      # 存储器驱动适配
+│   │   └── ... (标准流水线级模块)
+│   ├── golden_model/           # C++ 编写的指令集模拟器 (Golden Model)
+│   ├── asm/                    # 汇编测试用例源码
+│   ├── bin/                    # 编译后的二进制机器码
+│   ├── vsrc/                   # 仿真用存储器模型
+│   ├── run_all_tests.py        # 自动化回归测试脚本
+│   └── Makefile                # 编译与仿真构建脚本
+└── README.md
 ```
 
-### 冲突检测 (Hazard Unit)
-在 `mySoC/Data_hazard.sv` 中，新增了针对多级流水线的复杂冲突检测逻辑：
-- 支持 `MEM_PIPE` 和 `MEM2` 阶段的数据前瞻。
-- 精确的 `pipe_load_use` 信号生成，最大程度减少流水线停顿。
+---
+
+## �️ 1. CPU：原始三级流水线架构
+
+位于 `CPU/` 目录下的代码是该项目的起源，采用了经典的**三级流水线**结构。该版本结构清晰，逻辑直观，主要用于验证指令集功能的正确性。
+
+### 核心架构
+- **Stage 1: IF (取指)**
+  - 负责 PC 的维护与指令存储器（IROM）的访问。
+- **Stage 2: ID + EX (译码与执行)**
+  - 将译码（Decode）与执行（Execute）合并在同一个时钟周期内完成。
+  - **特点**：这一级逻辑深度较大，包含立即数生成、寄存器堆读取、ALU 运算以及分支跳转判断。虽然减少了流水线级数，但也限制了主频的提升。
+- **Stage 3: MEM + WB (访存与写回)**
+  - 将数据存储器（DRAM）的读写与结果写回寄存器堆合并。
+  - 通过 `EX_LSWB_Reg` 寄存器接收来自执行级的结果。
+
+### 关键文件解析
+- **`IFID_EX_Reg.sv` & `EX_LSWB_Reg.sv`**：显式的流水线寄存器模块，清晰地界定了流水线的边界。
+- **`Control.sv`**：传统的集中式控制逻辑，根据 Opcode 生成各级的控制信号。
+- **`Data_hazard.sv`**：处理基础的数据相关（RAW），主要负责生成 Stall 信号以解决冲突。
 
 ---
 
-## 📜 版权说明
-Project by **hongpengWu**.
-Based on the 9th National University IC Innovation & Entrepreneurship Competition (Jingyeda Cup) platform.
+## 🚀 2. cdp-tests：高性能五级流水线架构
+
+位于 `cdp-tests/` 目录下的设计代表了架构的深度进化。为了突破三级流水线的频率瓶颈并适配更复杂的 SoC 环境，我们将架构扩展为**五级+流水线**，并引入了大量时序优化技术。
+
+### 核心架构与优化亮点
+该版本将流水线细分为：**IF (取指) → ID (译码) → EX (执行) → MEM (访存) → WB (写回)**。
+
+#### 1. LSU 的深度流水线化 (Pipelined LSU)
+在 `cdp-tests/mySoC/LSU.sv` 中，访存阶段不再是一个简单的组合逻辑操作。
+- **多级拆分**：为了应对高扇出（High Fan-out）和长路由延迟，MEM 阶段被内部拆分为 `MEM1`, `MEM2`, `MEM3` 等多个微流水级。
+- **寄存器复制**：利用 `(* max_fanout *)` 属性，对关键路径上的地址和控制信号进行物理级别的寄存器复制，显著降低了布线拥塞和延迟。
+
+#### 2. 增强型冲突检测 (Advanced Hazard Unit)
+随着流水线加深，数据冒险的处理变得更加复杂。`cdp-tests/mySoC/Data_hazard.sv` 进行了全面升级：
+- **全路径前递 (Forwarding)**：不仅支持 EX 级的前递，还实现了从 MEM 各个微流水级到 ID/EX 级的数据前递，最大程度减少流水线气泡。
+- **Load-Use 优化**：能够精确检测 Load 指令后的使用冲突，并插入最小周期的 Stall。
+
+#### 3. SoC 集成与总线适配
+- **`miniRV_SoC.v`**：这是适配竞业达杯赛题的 SoC 顶层文件，集成了 CPU 核心与外设接口。
+- **`dram_driver.sv`**：针对赛题提供的存储器接口进行了驱动层适配，处理字节/半字/字的不同读写模式。
+
+#### 4. 自动化验证体系
+为了确保优化后的正确性，该目录包含了一套完整的验证框架：
+- **Golden Model (`golden_model/`)**：基于 C++ 实现的标准 RISC-V 指令集模拟器，作为“黄金标准”。
+- **自动化脚本 (`run_all_tests.py`)**：能够批量运行 `asm/` 下的所有汇编用例，自动对比 Verilog 仿真结果与 Golden Model 的执行结果，并输出详细的 Pass/Fail 报告。
+
+---
+
+## 🛠️ 快速上手
+
+### 运行环境
+- **仿真工具**：Verilator (推荐) 或 Vivado Simulator
+- **构建工具**：Make, Python 3
+
+### 测试步骤
+进入优化版本目录，一键运行所有测试：
+
+```bash
+cd cdp-tests
+make clean && make      # 编译仿真模型
+python run_all_tests.py # 运行回归测试
+```
+
+测试脚本将自动遍历所有指令用例（如 `add`, `beq`, `lw` 等），并在终端输出测试结果摘要。
