@@ -10,7 +10,5 @@ module sext#
 
 assign sext_data = {{(OUT_WIDTH-DATA_WIDTH){data[DATA_WIDTH-1]}},data};
 
-
-
 endmodule
 

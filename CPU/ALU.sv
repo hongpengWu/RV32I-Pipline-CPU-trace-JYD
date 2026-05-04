@@ -1,76 +1,111 @@
 `include "para.sv"
 `timescale 1ns / 1ps
 
-// ÒÆ³ý²»±ØÒªµÄclockÊäÈë
 module ALU #(
-    parameter BW = 32    
+    parameter BW = 32
 )
 (
+    input clock,
     input [BW-1: 0] d1,
     input [BW-1: 0] d2,
     input [3: 0] choice,
-    output logic [BW-1: 0] result
+    output logic [BW-1: 0] res
 );
 
-    // Ô¤¼ÆËãÒÔ¼õÉÙ¹Ø¼üÂ·¾¶
+    logic choose_add_sub;
+    logic [BW-1: 0] result;
     logic [BW-1: 0] d2_inv;
-    logic [BW-1: 0] add_result;
-    logic [BW-1: 0] sub_result;
-    logic [BW-1: 0] and_result;
-    logic [BW-1: 0] or_result;
-    logic [BW-1: 0] xor_result;
-    logic [BW-1: 0] sll_result;
-    logic [BW-1: 0] srl_result;
-    logic [BW-1: 0] sra_result;
-    
-    // ±È½Ï½á¹û
-    logic signed_lt;
-    logic unsigned_lt;
-    logic equal;
-    
+    logic [BW-1: 0] d1_inv;
     assign d2_inv = ~d2;
-    
-    // ²¢ÐÐ¼ÆËã»ù±¾²Ù×÷
-    assign and_result = d1 & d2;
-    assign or_result  = d1 | d2;
-    assign xor_result = d1 ^ d2;
-    assign sll_result = d1 << d2[4:0];
-    assign srl_result = d1 >> d2[4:0];
-    assign sra_result = $signed(d1) >>> d2[4:0];
-    
-    // ÓÅ»¯±È½ÏÂß¼­
-    assign signed_lt = $signed(d1) < $signed(d2);
-    assign unsigned_lt = d1 < d2;
-    assign equal = (d1 != d2);
+    assign d1_inv = ~d1;
 
-    // Ê¹ÓÃaddÄ£¿é½øÐÐ¼Ó¼õ·¨
-    add #(
-        .BW(BW)
-    ) add_inst0 (
-        .choose_add_sub(choice == `alu_sub),
-        .add_1(d1),
-        .add_2(d2),
-        .add_2_inv(d2_inv),
-        .result(add_result)
-    );
-    
-    assign sub_result = add_result;  // ¼Ó¼õ·¨¶¼Í¨¹ýaddÄ£¿é
-
-    // ÓÅ»¯µÄcaseÑ¡ÔñÂß¼­
-    always@(*) begin
-        case(choice)
-            `alu_signed_comparator:   result = {31'b0, signed_lt};
-            `alu_unsigned_comparator: result = {31'b0, unsigned_lt};
-            `alu_add:                 result = add_result;
-            `alu_sub:                 result = sub_result;
-            `alu_and:                 result = and_result;
-            `alu_or:                  result = or_result;
-            `alu_xor:                 result = xor_result;
-            `alu_equal:               result = {31'b0, equal};
-            `alu_sll:                 result = sll_result;
-            `alu_srl:                 result = srl_result;
-            `alu_sra:                 result = sra_result;
-            default:                  result = 32'b0;
-        endcase
+always@(*)
+    begin
+    res = 0;
+    case(choice)
+    `alu_signed_comparator:begin                      // æ¯”è¾ƒå¤§å°
+            choose_add_sub = 1'b1;
+            if(d1[BW-1] != d2[BW-1])
+                begin
+                    if(d1[BW-1] == 1'b1)
+                        res[0] = 1;
+                    else
+                        res[0] = 0;
+                end
+            else
+                begin
+                    if(result[BW-1] == 1'b1)
+                        res[0] = 1;
+                    else
+                        res[0] = 0;
+                end
+            end
+    `alu_unsigned_comparator:begin
+                choose_add_sub = 1'b0;
+                if(d1 < d2)
+                    res[0] = 1;
+                else
+                    res[0] = 0;
+            end
+    `alu_add: begin                                   //åŠ æ³•
+            choose_add_sub = 1'b0;
+            res = result;
+            end
+    `alu_sub: begin                                   //å‡æ³•
+            choose_add_sub = 1'b1;
+            res = result;
+            end
+    `alu_and: begin                                   //ï¿½?
+            res = d1 & d2;
+            choose_add_sub = 1'b0;
+            end
+    `alu_or: begin                                    //ï¿½?
+            res = d1 | d2;
+            choose_add_sub = 1'b0;
+            end
+    `alu_xor: begin                                   //å¼‚æˆ–
+            res = (d1 & d2_inv) | (d1_inv & d2);
+            choose_add_sub = 1'b0;
+            end
+    `alu_equal:begin                                  //æ˜¯å¦ç›¸ç­‰
+            choose_add_sub = 1'b0;
+            if(d1 != d2)
+                res[0] = 1;
+            else
+                res[0] = 0;
+            end
+    `alu_sll:begin                                    //é€»è¾‘å·¦ç§»
+            choose_add_sub = 1'b0;
+            res = d1<<d2[4:0];
     end
+    `alu_srl:begin                                    //é€»è¾‘å³ç§»
+            choose_add_sub = 1'b0;
+            res = {{{BW{1'b0}},d1}>>d2[4:0]};                       //[31:0];
+    end
+    `alu_sra:begin                                    //ç®—æœ¯å³ç§»
+            choose_add_sub = 1'b0;
+            res = {{{BW{d1[BW-1]}},d1}>>d2[4:0]};                   //[31:0];
+    end
+    default:begin
+            choose_add_sub = 1'b0;
+            res = 0;
+    end
+    endcase
+    
+end
+
+add
+#(
+    .BW(BW)
+)add_inst0
+(
+    .choose_add_sub(choose_add_sub),
+    .add_1(d1),
+    .add_2(d2),
+    .add_2_inv(d2_inv),
+    .result(result)
+);
+
+
 endmodule
+

@@ -26,7 +26,7 @@ module IDU(
     output [31:0] branch_pc,
     output [31:0] rs1_value,
     output [31:0] rs2_value,
-
+    
     output [31:0] add1_value,
     output [31:0] add2_value,
     output [3:0] csr_wen_next,
@@ -89,59 +89,60 @@ module IDU(
 
     assign R_wen_next = (opcode == `S_opcode || opcode == `B_opcode || opcode == 0)? 1'b0:1'b1;
     assign mem_wen = (opcode == `S_opcode);
-    assign mem_ren = (opcode == `lw);
+    assign mem_ren = (opcode == `I0_opcode);
 
-    assign jump_flag = (opcode == `jarl || opcode == `jal)? 1'b1:1'b0;
+    assign jump_flag = (opcode == `I2_opcode || opcode == `J_opcode)? 1'b1:1'b0;
 
     assign inv_flag = (opcode == `B_opcode && (funct3 == 3'b101 || funct3 == 3'b111 || funct3 == 3'b000 ))? 1'b1:1'b0;
     assign branch_flag = (opcode == `B_opcode)? 1'b1:1'b0;
-
+ 
     assign csr_addr = imm;
 
-    assign rd_value_next = jump_flag? snpc:
-        (|csr_wen_next)? csrs:
-        0;
+    assign rd_value_next = jump_flag? snpc: 
+                          (|csr_wen_next)? csrs:
+                          0;
     assign branch_pc = pc + imm;
     assign pc_out = pc;
 
-    assign add1_value = (opcode == `lui)? 0 :
-        (opcode == `jal || opcode == `auipc )? pc :
-        EXU_rs1_in;
+    assign add1_value = (opcode == `U0_opcode)? 0 :
+                        (opcode == `J_opcode || opcode == `U1_opcode )? pc :
+                        EXU_rs1_in;
 
     assign add2_value = (opcode == `R_opcode || opcode == `B_opcode)? EXU_rs2_in :
-        (opcode == `M_opcode && funct3 == 3'b010)? rd_value_next :
-        (opcode == `M_opcode && funct3 == 3'b001)? 0 : imm;
+                        (opcode == `M_opcode && funct3 == 3'b010)? rd_value_next :
+                        (opcode == `M_opcode && funct3 == 3'b001)? 0 : imm;
+ 
 
-    assign alu_opcode = (opcode == `S_opcode || opcode == `lw
-        || opcode == `lui || opcode == `auipc
-        || opcode == `jal || opcode == `jarl
-        || (opcode ==`addi && funct3 == 3'b000) || (opcode == `R_opcode &&
-        funct3 == 3'b000 && oprand[5] == 1'b0) || (opcode == `B_opcode &&
-        funct3[2:1] == 2'b01))?
-        `alu_add : (opcode == `addi && funct3 == 3'b010) ||
-        (opcode == `R_opcode && funct3 == 3'b010) ||
-        (opcode == `B_opcode && (funct3 == 3'b101 || funct3 == 3'b100))?
-        `alu_signed_comparator:
-        (opcode == `B_opcode && (funct3 == 3'b110 || funct3 == 3'b111)) ||
-        (opcode == `addi && (funct3 == 3'b011)) ||
-        (opcode == `R_opcode && (funct3 == 3'b011))?
-        `alu_unsigned_comparator:
-        (opcode == `addi && funct3 == 3'b100 ) ||
-        (opcode == `R_opcode && funct3 == 3'b100 )?
-        `alu_xor : (opcode == `addi && funct3 == 3'b110 ) ||
-        (opcode == `R_opcode && funct3 == 3'b110 ) ||
-        (opcode == `M_opcode && funct3 == 3'b010 )?
-        `alu_or : (opcode == `addi && funct3 == 3'b111 ) ||
-        (opcode == `R_opcode && funct3 == 3'b111 )?
-        `alu_and : (opcode == `addi && funct3 == 3'b001 ) ||
-        (opcode == `R_opcode && funct3 == 3'b001 )?
-        `alu_sll : (opcode == `addi && funct3 == 3'b101 && oprand[5] == 1'b0) ||
-        (opcode == `R_opcode && funct3 == 3'b101 && oprand[5] == 1'b0)?
-        `alu_srl : (opcode == `addi && funct3 == 3'b101 && oprand[5] == 1'b1) ||
-        (opcode == `R_opcode && funct3 == 3'b101 && oprand[5] == 1'b1)?
-        `alu_sra : (opcode == `R_opcode && funct3 == 3'b000 && oprand[5] == 1'b1)?
-        `alu_sub : (opcode == `B_opcode && funct3[2:1] == 2'b00)?
-        `alu_equal:`alu_add;
+    assign alu_opcode = (opcode == `S_opcode || opcode == `I0_opcode 
+                        || opcode == `U0_opcode || opcode == `U1_opcode
+                        || opcode == `J_opcode || opcode == `I2_opcode
+                        || (opcode ==`I1_opcode && funct3 == 3'b000) || (opcode == `R_opcode &&
+                        funct3 == 3'b000 && oprand[5] == 1'b0) || (opcode == `B_opcode &&
+                        funct3[2:1] == 2'b01 )) ?
+                        `alu_add :(opcode == `I1_opcode && funct3 == 3'b010) ||
+                        (opcode == `R_opcode && funct3 == 3'b010) ||
+                        (opcode == `B_opcode && (funct3 == 3'b101 || funct3 == 3'b100)) ?
+                        `alu_signed_comparator:
+                        (opcode == `B_opcode && (funct3 == 3'b110 || funct3 == 3'b111)) ||
+                        (opcode == `I1_opcode && (funct3 == 3'b011)) ||
+                        (opcode == `R_opcode && (funct3 == 3'b011)) ?
+                        `alu_unsigned_comparator:
+                        (opcode == `I1_opcode && funct3 == 3'b100 ) ||
+                        (opcode == `R_opcode && funct3 == 3'b100 ) ?
+                        `alu_xor :(opcode == `I1_opcode && funct3 == 3'b110 ) ||
+                        (opcode == `R_opcode && funct3 == 3'b110 ) ||
+                        (opcode == `M_opcode && funct3 == 3'b010 ) ?
+                        `alu_or : (opcode == `I1_opcode && funct3 == 3'b111 ) ||
+                        (opcode == `R_opcode && funct3 == 3'b111 ) ?
+                        `alu_and :(opcode == `I1_opcode && funct3 == 3'b001 ) ||
+                        (opcode == `R_opcode && funct3 == 3'b001 ) ?
+                        `alu_sll :(opcode == `I1_opcode && funct3 == 3'b101 && oprand[5] == 1'b0) ||
+                        (opcode == `R_opcode && funct3 == 3'b101 && oprand[5] == 1'b0) ?
+                        `alu_srl :(opcode == `I1_opcode && funct3 == 3'b101 && oprand[5] == 1'b1) ||
+                        (opcode == `R_opcode && funct3 == 3'b101 && oprand[5] == 1'b1) ?
+                        `alu_sra : (opcode == `R_opcode && funct3 == 3'b000 && oprand[5] == 1'b1) ?
+                        `alu_sub : (opcode == `B_opcode && funct3[2:1] == 2'b00) ?
+                        `alu_equal:`alu_add;
 
     assign imm_I = {{20{inst[31]}},inst[31:20]};
     assign imm_U = {inst[31:12],12'd0};
@@ -151,13 +152,13 @@ module IDU(
     assign imm_J = {{11{inst[31]}},inst[31],inst[19:12],inst[20],inst[30:21]}<<1;
 /* verilator lint_off IMPLICIT */
 
-    assign imm = (opcode == `lw || opcode == `addi || opcode == `jarl || opcode == `M_opcode)? imm_I:
-        (opcode == `lui || opcode == `auipc)? imm_U:
-        (opcode == `jal)? imm_J:
-        (opcode == `B_opcode)? imm_B:
-        (opcode == `S_opcode)? imm_S:
-        (opcode == `S_opcode)? imm_R :
-        0;
+    assign imm = (opcode == `I0_opcode || opcode == `I1_opcode || opcode == `I2_opcode || opcode == `M_opcode)? imm_I:
+                 (opcode == `U0_opcode || opcode == `U1_opcode)? imm_U:
+                 (opcode == `J_opcode)? imm_J:
+                 (opcode == `B_opcode)? imm_B:
+                 (opcode == `S_opcode)? imm_S: 
+                 (opcode == `S_opcode)? imm_R :
+                  0;
 
 Reg_Stack Reg_Stack_inst0(
     .reset(reset),
@@ -180,7 +181,7 @@ Reg_Stack Reg_Stack_inst0(
     .a0_value(a0_value),
     .csrs(csrs),
     .mepc_out(mepc_out),
-    .mtvec_out(mtvec_out)
+    .mtvec_out(mtvec_out) 
 );
 
 endmodule

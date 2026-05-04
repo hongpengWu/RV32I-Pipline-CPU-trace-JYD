@@ -1,7 +1,8 @@
 `timescale 1ns / 1ps
 `include "para.sv"
 
-module IFU(
+module IFU
+(
     input clock,
     input reset,
     input [31:0] dnpc,
@@ -24,13 +25,13 @@ module IFU(
     assign inst = irom_data;
 
     always @(posedge clock) begin
-        if (reset)
+        if(reset)
             pc <= ResetValue;
-        else if (stall & valid & ready)
+        else if (stall & valid &ready)
             pc <= pc;
-        else if (dnpc_flag & valid & ready)
+        else if(dnpc_flag&valid&ready)
             pc <= dnpc;
-        else if (valid & ready)
+        else if(valid & ready)
             pc <= snpc;
     end
 

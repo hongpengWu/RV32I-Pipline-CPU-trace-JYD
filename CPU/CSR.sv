@@ -1,30 +1,35 @@
 module CSR #(
     parameter CSR_WIDTH = 32,
     parameter RESET_VAL = 0
-)(
+)
+(
     input clock,
     input reset,
-    input [31:0] pc,
+    input [31: 0] pc,
     input ecall_flag,
-    input [31:0] csrd,
-    input [3:0] csr_wen,
-    output [31:0] mvendorid_out,
-    output [31:0] marchid_out,
-    output [31:0] mepc_out,
-    output [31:0] mcause_out,
-    output [31:0] mstatus_out,
-    output [31:0] mtvec_out
+    input [31: 0] csrd,
+    input [3: 0] csr_wen,
+
+    output [31: 0] mvendorid_out,
+    output [31: 0] marchid_out,
+    output [31: 0] mepc_out,
+    output [31: 0] mcause_out,
+    output [31: 0] mstatus_out,
+    output [31: 0] mtvec_out
 );
-    logic [31:0] mepc_in;
-    logic [31:0] mcause_in;
-    logic [31:0] mstatus_in;
-    logic [31:0] mtvec_in;
-    assign mepc_in = (ecall_flag) ? pc : csrd;
-    assign mcause_in = (ecall_flag) ? 11 : csrd;
+
+    logic [31: 0] mepc_in;
+    logic [31: 0] mcause_in;
+    logic [31: 0] mstatus_in;
+    logic [31: 0] mtvec_in;
+
+    assign mepc_in = (ecall_flag)? pc : csrd;
+    assign mcause_in = (ecall_flag)? 11 : csrd;
     assign mstatus_in = csrd;
     assign mtvec_in = csrd;
     assign mvendorid_out = 32'h79737978;
     assign marchid_out = 32'h16FBCBD;
+
 Reg #(
     .WIDTH(CSR_WIDTH),
     .RESET_VAL(RESET_VAL)
@@ -35,6 +40,7 @@ Reg #(
     .dout(mepc_out),
     .wen(csr_wen[0] | ecall_flag)
 );
+
 Reg #(
     .WIDTH(CSR_WIDTH),
     .RESET_VAL(RESET_VAL)
@@ -45,6 +51,7 @@ Reg #(
     .dout(mcause_out),
     .wen(csr_wen[1] | ecall_flag)
 );
+
 Reg #(
     .WIDTH(CSR_WIDTH),
     .RESET_VAL(32'h1800)
@@ -55,6 +62,7 @@ Reg #(
     .dout(mstatus_out),
     .wen(csr_wen[2])
 );
+
 Reg #(
     .WIDTH(CSR_WIDTH),
     .RESET_VAL(RESET_VAL)
@@ -65,4 +73,5 @@ Reg #(
     .dout(mtvec_out),
     .wen(csr_wen[3])
 );
-endmodule
+
+endmodule //CSR
